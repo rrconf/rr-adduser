@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+test -z "$(type -p)" || { echo bash required; exit 1; }
+set -Eeuo pipefail
+source "${RRCONFINC}"
+
+# command line argument, if specified, has preference
+test $# -eq 1 && ADDUSER_NAME="${1}"
+
+: "${ADDUSER_NAME:-}"
+if [[ -z "${ADDUSER_NAME}" ]]; then
+  fail "Missing username to add."
+fi
+
+# defaults
+: "${ADDUSER_UIDFORCE:=}"
+: "${ADDUSER_UID:=}"
+: "${ADDUSER_GIDFORCE:=}"
+: "${ADDUSER_GID:=}"
+: "${ADDUSER_GROUP:=}"
+: "${ADDUSER_SHELL:="/bin/bash"}"
+: "${ADDUSER_GECOS:="${ADDUSER_NAME}"}"
+: "${ADDUSER_HOME:="/home/${ADDUSER_NAME}"}"
+
+# if forced, ensure requested UID/GID has forced value
+test -n "${ADDUSER_UIDFORCE}" &&
+  ADDUSER_UID="${ADDUSER_UIDFORCE}"
+
+test -n "${ADDUSER_GIDFORCE}" &&
+  ADDUSER_GID="${ADDUSER_GIDFORCE}"
+
+# determine default group and GID
+DEFAULT_GROUP="${ADDUSER_GROUP:-${ADDUSER_NAME}}"
+DEFAULT_GID="${ADDUSER_GID:-}"
+
+getent passwd "${ADDUSER_NAME}" >/dev/null 2>&1 || {
+  # the user does not exist
+
+  test -z "${ADDUSER_UID}" &&
+    # no UID requested - add by name
+    exec adduser "${ADDUSER_NAME}" \
+      --shell "${ADDUSER_SHELL}" \
+      --gecos "${ADDUSER_GECOS}" \
+      --home "${ADDUSER_HOME}" \
+      --disabled-password \
+      --ingroup "${DEFAULT_GROUP}" \
+      ${DEFAULT_GID:+--gid "${DEFAULT_GID}"}  # use GID if provided
+
+  # use requested UID to create user
+  exec adduser --uid "${ADDUSER_UID}" "${ADDUSER_NAME}" \
+    --shell "${ADDUSER_SHELL}" \
+    --gecos "${ADDUSER_GECOS}" \
+    --home "${ADDUSER_HOME}" \
+    --disabled-password \
+    --ingroup "${DEFAULT_GROUP}" \
+    ${DEFAULT_GID:+--gid "${DEFAULT_GID}"}  # use GID if provided
+}
+
+# user exists
+test -z "${ADDUSER_UID}" && exit 0 # no UID requested or forced
+
+currentuid="$(getent passwd "${ADDUSER_NAME}" | awk -F: '{print$3}')"
+test "${ADDUSER_UID}" -eq "${currentuid}" && exit 0
+logv "User ${ADDUSER_NAME} already exists with UID=${currentuid}"
+
+test -z "${ADDUSER_UIDFORCE}" && exit 0
+fail "Cannot change user ${ADDUSER_NAME} UID to ${ADDUSER_UIDFORCE}"
