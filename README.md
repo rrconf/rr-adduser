@@ -21,6 +21,6 @@ If `ADDUSER_UID` is set, the creation of the user uses given UID. If the user al
 
 If `ADDUSER_GID` is set, the creation of the user uses given GID. If the user already exists, and also `ADDUSER_GIDFORCE` is provided, the module fails if the user exists with a different GID.
 
-If `ADDUSER_GROUP` is provided, the user is added to this group as the primary group. If the group does not exist, it will be created.
+If `ADDUSER_GROUP` is provided, the user is added to this group as the primary group. If the group does not exist, it must be created beforehand.
 
 The `ADDUSER_HOME`, `ADDUSER_GECOS` and `ADDUSER_SHELL` allow to specify details for the user being created. They default to `/home/$ADDUSER_NAME`, `$ADDUSER_NAME` and `/bin/bash`.
