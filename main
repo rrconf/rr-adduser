@@ -42,7 +42,6 @@ getent passwd "${ADDUSER_NAME}" >/dev/null 2>&1 || {
       --gecos "${ADDUSER_GECOS}" \
       --home "${ADDUSER_HOME}" \
       --disabled-password \
-      ${DEFAULT_GID:---ingroup "${DEFAULT_GROUP}"} \
       ${DEFAULT_GID:+--gid "${DEFAULT_GID}"}  # use GID if provided
 
   # use requested UID to create user
@@ -51,7 +50,6 @@ getent passwd "${ADDUSER_NAME}" >/dev/null 2>&1 || {
     --gecos "${ADDUSER_GECOS}" \
     --home "${ADDUSER_HOME}" \
     --disabled-password \
-    ${DEFAULT_GID:---ingroup "${DEFAULT_GROUP}"} \
     ${DEFAULT_GID:+--gid "${DEFAULT_GID}"}  # use GID if provided
 }
 
